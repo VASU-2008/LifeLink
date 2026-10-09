@@ -6,7 +6,7 @@ import { createApp } from './app.js';
 import { User } from './models/User.js';
 import { seedDatabase } from './seeds/seed.js';
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {

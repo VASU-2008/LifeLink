@@ -8,19 +8,22 @@ export const connectDB = async (): Promise<void> => {
 
   try {
     if (uri && !uri.includes('localhost:27017')) {
-      // Direct remote/custom MongoDB connection
-      await mongoose.connect(uri);
-      console.log(`[MongoDB] Connected to remote database: ${mongoose.connection.host}`);
-      return;
+      try {
+        await mongoose.connect(uri, { serverSelectionTimeoutMS: 3000 });
+        console.log(`[MongoDB] Connected to remote database: ${mongoose.connection.host}`);
+        return;
+      } catch (remoteErr: any) {
+        console.warn(`[MongoDB] Remote connection failed (${remoteErr.message}). Falling back to in-memory database...`);
+      }
     }
 
     // Attempt local MongoDB first with 2.5s timeout
     try {
-      const localUri = uri || 'mongodb://localhost:27017/lifelink';
+      const localUri = 'mongodb://localhost:27017/lifelink';
       await mongoose.connect(localUri, { serverSelectionTimeoutMS: 2500 });
       console.log(`[MongoDB] Connected to local database: ${mongoose.connection.host}`);
     } catch (localErr) {
-      console.log('[MongoDB] Local MongoDB daemon not found. Starting embedded In-Memory MongoDB Server...');
+      console.log('[MongoDB] Starting embedded In-Memory MongoDB Server...');
       mongod = await MongoMemoryServer.create();
       const inMemoryUri = mongod.getUri();
       await mongoose.connect(inMemoryUri);
